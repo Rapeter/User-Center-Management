@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import type { ProColumns, ActionType } from '@ant-design/pro-table';
-import ProTable, { TableDropdown } from '@ant-design/pro-table';
-import { searchUsers } from "@/services/ant-design-pro/api";
-import {Image} from "antd";
+import ProTable from '@ant-design/pro-table';
+import { deleteUser, searchUsers } from '@/services/ant-design-pro/api';
+import { Button, Image, message, Popconfirm } from 'antd';
 
 const columns: ProColumns<API.CurrentUser>[] = [
   {
@@ -71,27 +71,30 @@ const columns: ProColumns<API.CurrentUser>[] = [
   {
     title: '操作',
     valueType: 'option',
-    render: (text, record, _, action) => [
-      <a
-        key="editable"
-        onClick={() => {
-          action?.startEditable?.(record.id);
+    render: (_, record, __, action) => (
+      <Popconfirm
+        title="确定删除此用户吗？"
+        okText="删除"
+        cancelText="取消"
+        onConfirm={async () => {
+          try {
+            const result = await deleteUser(record.id);
+            if (result) {
+              message.success('删除成功');
+              action?.reload();
+              return;
+            }
+            message.error('删除失败，请重试');
+          } catch {
+            message.error('删除失败，请重试');
+          }
         }}
       >
-        编辑
-      </a>,
-      <a href={record.url} target="_blank" rel="noopener noreferrer" key="view">
-        查看
-      </a>,
-      <TableDropdown
-        key="actionGroup"
-        onSelect={() => action?.reload()}
-        menus={[
-          { key: 'copy', name: '复制' },
-          { key: 'delete', name: '删除' },
-        ]}
-      />,
-    ],
+        <Button type="link" danger>
+          删除
+        </Button>
+      </Popconfirm>
+    ),
   },
 ];
 
@@ -102,15 +105,13 @@ export default () => {
       columns={columns}
       actionRef={actionRef}
       cardBordered
-      request={async (params = {}, sort, filter) => {
-        console.log(sort, filter);
-        const userList = await searchUsers();
+      request={async (params = {}) => {
+        const userList = await searchUsers({ username: params.username });
         return {
-          data: userList
-        }
-      }}
-      editable={{
-        type: 'multiple',
+          data: userList,
+          success: true,
+          total: userList.length,
+        };
       }}
       columnsState={{
         persistenceKey: 'pro-table-singe-demos',
@@ -132,9 +133,7 @@ export default () => {
           return values;
         },
       }}
-      pagination={{
-        pageSize: 5,
-      }}
+      pagination={false}
       dateFormatter="string"
       headerTitle="高级表格"
     />

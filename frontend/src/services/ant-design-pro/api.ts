@@ -43,10 +43,21 @@ export async function register(body: API.RegisterParams, options?: { [key: strin
 }
 
 /** 搜索用户 GET /api/user/search */
-export async function searchUsers(options?: { [key: string]: any }) {
-  return request<API.BaseResponse<API.CurrentUser[]>>('/api/user/search', {
+export async function searchUsers(params?: { username?: string }) {
+  return request<API.CurrentUser[]>('/api/user/search', {
     method: 'GET',
-    ...(options || {}),
+    params,
+  });
+}
+
+/** 删除用户 POST /api/user/delete */
+export async function deleteUser(id: number) {
+  return request<boolean>('/api/user/delete', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: id,
   });
 }
 
