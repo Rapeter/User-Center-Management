@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -158,10 +159,30 @@ public class UserController {
      * @return
      */
     private boolean isAdmin(HttpServletRequest request) {
-        // 仅管理员可查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
-        return user != null && user.getUserRole() == ADMIN_ROLE;
+        HttpSession session = request.getSession(false);
+        if (session == null) {
+            return false;
+        }
+        Object userObj = session.getAttribute(USER_LOGIN_STATE);
+        if (!(userObj instanceof User)) {
+            session.removeAttribute(USER_LOGIN_STATE);
+            return false;
+        }
+        User sessionUser = (User) userObj;
+        Long userId = sessionUser.getId();
+        if (userId == null) {
+            session.removeAttribute(USER_LOGIN_STATE);
+            return false;
+        }
+
+        // Read the current database record so deleted or demoted users cannot keep stale admin privileges.
+        User currentUser = userService.getById(userId);
+        if (currentUser == null) {
+            session.removeAttribute(USER_LOGIN_STATE);
+            return false;
+        }
+        session.setAttribute(USER_LOGIN_STATE, userService.getSafetyUser(currentUser));
+        return Integer.valueOf(ADMIN_ROLE).equals(currentUser.getUserRole());
     }
 
 }
