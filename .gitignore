@@ -1,0 +1,17 @@
+# Build output and dependencies
+backend/target/
+frontend/node_modules/
+frontend/dist/
+
+# Local credentials and environment files
+.env
+.env.*
+
+# IDE and operating system files
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Plan execution scratch state
+.superpowers/
