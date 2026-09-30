@@ -1,7 +1,6 @@
 package com.yupi.usercenter.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fasterxml.jackson.databind.ser.Serializers;
 import com.yupi.usercenter.common.BaseResponse;
 import com.yupi.usercenter.common.ErrorCode;
 import com.yupi.usercenter.common.ResultUtils;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,16 +43,19 @@ public class UserController {
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         // 校验
         if (userRegisterRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "注册请求不能为空");
         }
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         String planetCode = userRegisterRequest.getPlanetCode();
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword, planetCode)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "注册参数不能为空");
         }
         long result = userService.userRegister(userAccount, userPassword, checkPassword, planetCode);
+        if (result <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号、密码或星球编号不符合要求");
+        }
         return ResultUtils.success(result);
     }
 
@@ -68,14 +69,17 @@ public class UserController {
     @PostMapping("/login")
     public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest request) {
         if (userLoginRequest == null) {
-            return ResultUtils.error(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "登录请求不能为空");
         }
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            return ResultUtils.error(ErrorCode.PARAMS_ERROR);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号和密码不能为空");
         }
         User user = userService.userLogin(userAccount, userPassword, request);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号或密码错误");
+        }
         return ResultUtils.success(user);
     }
 
@@ -108,8 +112,11 @@ public class UserController {
             throw new BusinessException(ErrorCode.NOT_LOGIN);
         }
         long userId = currentUser.getId();
-        // TODO 校验用户是否合法
         User user = userService.getById(userId);
+        if (user == null) {
+            request.getSession().removeAttribute(USER_LOGIN_STATE);
+            throw new BusinessException(ErrorCode.NOT_LOGIN);
+        }
         User safetyUser = userService.getSafetyUser(user);
         return ResultUtils.success(safetyUser);
     }
