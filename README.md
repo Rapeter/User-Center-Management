@@ -108,5 +108,3 @@ REACT_APP_API_BASE_URL="https://api.example.com" npm run build
 ## 学习建议
 
 从 [`源码学习路线.md`](源码学习路线.md) 开始，按照数据库、后端分层、Session 登录态、React 路由与页面、前后端接口调用的顺序阅读。源码包中的密码处理使用固定盐 MD5，仅用于学习示例；实际系统应改用适合密码存储的慢哈希算法并评估完整的部署安全配置。
-
-
