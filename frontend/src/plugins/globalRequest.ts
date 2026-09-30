@@ -26,7 +26,7 @@ request.interceptors.request.use((url, options): any => {
     url,
     options: {
       ...options,
-      headers: {},
+      headers: options.headers || {},
     },
   };
 });
