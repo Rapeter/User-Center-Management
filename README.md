@@ -25,6 +25,8 @@ frontend/                React 前端
 
 ## 本地运行
 
+请先安装 Java 8 和 Maven，并准备 MySQL。
+
 ### 1. 准备数据库
 
 准备 MySQL，然后执行 [`backend/sql/create_table.sql`](backend/sql/create_table.sql)。脚本会创建 `yupi` 数据库和 `user` 表。
@@ -38,7 +40,7 @@ $env:DB_URL = "jdbc:mysql://localhost:3306/yupi"
 $env:DB_USERNAME = "root"
 $env:DB_PASSWORD = "你的本地 MySQL 密码"
 Set-Location backend
-.\mvnw.cmd spring-boot:run
+mvn spring-boot:run
 ```
 
 macOS/Linux 可以在 `backend/` 目录运行：
@@ -47,7 +49,7 @@ macOS/Linux 可以在 `backend/` 目录运行：
 export DB_URL="jdbc:mysql://localhost:3306/yupi"
 export DB_USERNAME="root"
 export DB_PASSWORD="你的本地 MySQL 密码"
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 如果不设置变量，本地配置默认连接 `localhost:3306/yupi`，用户名默认为 `root`，密码默认为空。也可以按自己的 MySQL 配置覆盖这些值。
@@ -82,11 +84,11 @@ WHERE userAccount = '你的账号' AND isDelete = 0;
 
 ```bash
 cd backend
-./mvnw package
+mvn -DskipTests package
 java -jar target/user-center-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod
 ```
 
-PowerShell 下可在 `backend/` 目录运行 `.\mvnw.cmd package`，再运行 `java -jar target\user-center-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod`。
+PowerShell 下可在 `backend/` 目录运行 `mvn -DskipTests package`，再运行 `java -jar target\user-center-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=prod`。打包命令跳过测试执行：现有 `UserServiceTest` 会直接更新和逻辑删除 ID 为 1 的记录，且注册断言与当前实现不一致；修复这些测试并配置隔离测试库后，再单独运行测试。
 
 前端生产构建可设置 `REACT_APP_API_BASE_URL`。PowerShell 示例：
 
